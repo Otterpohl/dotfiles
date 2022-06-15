@@ -26,3 +26,5 @@ alias f='firefox'
 
 # windows equivalents please
 alias cls='clear'
+
+kubectl completion fish | source
