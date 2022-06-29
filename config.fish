@@ -6,7 +6,8 @@ end
 alias l='exa'
 alias la='exa -a'
 alias ll='exa -lah'
-alias ls=' exa --color=auto'
+alias ls='exa --color=auto'
+alias lt='exa --tree'
 
 # Rust cargo stuff
 alias c='cargo'
@@ -23,6 +24,10 @@ alias gc='g commit'
 
 # firefox stuff
 alias f='firefox'
+
+# Kubernetes stuff
+alias k='kubectl'
+alias kgp='k get pods'
 
 # windows equivalents please
 alias cls='clear'
