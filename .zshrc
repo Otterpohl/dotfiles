@@ -1,6 +1,15 @@
-if status is-interactive
-    # Commands to run in interactive sessions can go here
-end
+export ZSH="$HOME/.oh-my-zsh"
+
+ZSH_THEME="otterpohl"
+
+plugins=(
+    git
+    zsh-autosuggestions
+    1password
+)
+
+source $ZSH/oh-my-zsh.sh
+source <(kubectl completion zsh)
 
 # ls replacement stuff
 alias l='exa'
@@ -27,9 +36,6 @@ alias f='firefox'
 
 # Kubernetes stuff
 alias k='kubectl'
-alias kgp='k get pods'
 
 # windows equivalents please
 alias cls='clear'
-
-kubectl completion fish | source
