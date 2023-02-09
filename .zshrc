@@ -37,5 +37,9 @@ alias f='firefox'
 # Kubernetes stuff
 alias k='kubectl'
 
-# windows equivalents please
+# windows stuff
 alias cls='clear'
+
+# sops stuff
+alias sd='sops -d -i --ignore-mac'
+alias se='sops -e -i'
