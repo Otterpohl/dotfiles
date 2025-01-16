@@ -4,7 +4,6 @@ ZSH_THEME="otterpohl"
 
 plugins=(
     git
-    zsh-autosuggestions
     1password
 )
 
@@ -12,11 +11,11 @@ source $ZSH/oh-my-zsh.sh
 source <(kubectl completion zsh)
 
 # ls replacement stuff
-alias l='exa'
-alias la='exa -a'
-alias ll='exa -lah'
-alias ls='exa --color=auto'
-alias lt='exa --tree'
+alias l='eza'
+alias la='eza -a'
+alias ll='eza -lah'
+alias ls='eza --color=auto'
+alias lt='eza --tree'
 
 # Rust cargo stuff
 alias c='cargo'
@@ -31,15 +30,8 @@ alias g='git'
 alias gs='g status'
 alias gc='g commit'
 
-# firefox stuff
-alias f='firefox'
-
 # Kubernetes stuff
 alias k='kubectl'
 
 # windows stuff
 alias cls='clear'
-
-# sops stuff
-alias sd='sops -d -i --ignore-mac'
-alias se='sops -e -i'
