@@ -169,13 +169,29 @@ section_herdr() {
 # ═══════════════════════════════════════════════════════════════
 section_pi() {
   info "[pi] checking…"
-  if ! command -v pi &>/dev/null; then
+
+  # Find npm — pi ships with its own Node
+  local NPM=""
+  for candidate in "$HOME/.local/share/pi-node/node-v22.23.1-linux-x64/bin/npm" \
+                  "/home/linuxbrew/.linuxbrew/bin/npm" \
+                  "$(command -v npm 2>/dev/null)"; do
+    if [[ -x "$candidate" ]]; then
+      NPM="$candidate"
+      break
+    fi
+  done
+
+  if [[ -z "$NPM" ]]; then
+    info "  npm not found, installing via pi install script…"
+    curl -fsSL https://pi.dev/install.sh | sh
+    ok "  pi installed via script"
+  elif ! command -v pi &>/dev/null; then
     info "  installing pi via npm…"
-    npm install -g --ignore-scripts @earendil-works/pi-coding-agent 2>&1 | tail -1
+    "$NPM" install -g --ignore-scripts @earendil-works/pi-coding-agent 2>&1 | tail -1
     ok "  pi installed"
   else
     info "  updating pi…"
-    npm install -g --ignore-scripts @earendil-works/pi-coding-agent 2>&1 | tail -1
+    "$NPM" install -g --ignore-scripts @earendil-works/pi-coding-agent 2>&1 | tail -1
     ok "  pi updated"
   fi
 
