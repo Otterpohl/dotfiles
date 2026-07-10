@@ -210,9 +210,14 @@ AGENTS
 
   # Install pi packages
   info "  installing pi packages…"
-  pi install npm:@zigai/pi-response-renderer 2>&1 | tail -1 || true
-  pi install npm:@zigai/pi-ui-tweaks 2>&1 | tail -1 || true
+  pi install npm:@zigai/pi-mention-project 2>&1 | tail -1 || true
   ok "  pi packages installed"
+
+  # Copy extensions from bootstrap repo
+  if [[ -d "$BOOTSTRAP_DIR/extensions" ]]; then
+    cp -n "$BOOTSTRAP_DIR/extensions/"*.ts "$HOME/.pi/agent/extensions/" 2>/dev/null || true
+    ok "  extensions copied"
+  fi
 
   ok "  pi configured"
 }
