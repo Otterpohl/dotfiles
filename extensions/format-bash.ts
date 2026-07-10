@@ -24,7 +24,7 @@ export default function (pi: ExtensionAPI) {
 
 		renderCall(args, theme, _context) {
 			const command = args.command as string;
-			const parts = command.split(/(?=&&|\|\||;|\|)/);
+			const parts = command.split(/(?=&&|\|\||;)/);
 			let text = theme.fg("toolTitle", theme.bold("$ "));
 			if (parts.length <= 1) {
 				text += theme.fg("accent", command);

@@ -106,7 +106,7 @@ export default function (pi: ExtensionAPI) {
 function formatPreview(toolName: string, input: Record<string, unknown>): string {
   if (toolName === "bash") {
     const cmd = (input.command as string) ?? JSON.stringify(input);
-    const parts = cmd.split(/(?=&&|\|\||;|\|)/);
+    const parts = cmd.split(/(?=&&|\|\||;)/);
     if (parts.length <= 1) return cmd;
     return parts.map((p) => "  " + p.trim()).join("\n");
   }
