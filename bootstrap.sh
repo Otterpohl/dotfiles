@@ -187,11 +187,11 @@ section_pi() {
     ok "  pi installed via script"
   elif ! command -v pi &>/dev/null; then
     info "  installing pi via npm…"
-    "$NPM" install -g --ignore-scripts @earendil-works/pi-coding-agent 2>&1 | tail -1
+    "$NPM" install -g --ignore-scripts --prefix="$HOME/.local" @earendil-works/pi-coding-agent 2>&1 | tail -1
     ok "  pi installed"
   else
     info "  updating pi…"
-    "$NPM" install -g --ignore-scripts @earendil-works/pi-coding-agent 2>&1 | tail -1
+    "$NPM" install -g --ignore-scripts --prefix="$HOME/.local" @earendil-works/pi-coding-agent 2>&1 | tail -1
     ok "  pi updated"
   fi
 
