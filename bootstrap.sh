@@ -38,7 +38,7 @@ section_mise() {
   fi
 
   # Ensure mise config is symlinked
-  local mise_src="$HOME/.config/bootstrap/mise.toml"
+  local mise_src="$BOOTSTRAP_DIR/mise.toml"
   local mise_dst="$HOME/.config/mise/config.toml"
   mkdir -p "$HOME/.config/mise"
   cp "$mise_src" "$mise_dst"
@@ -57,7 +57,7 @@ section_mise() {
 # ═══════════════════════════════════════════════════════════════
 BREW_PREFIX="/home/linuxbrew/.linuxbrew"
 BREK_BIN="$BREW_PREFIX/bin"
-BREWFILE="$HOME/.config/bootstrap/Brewfile"
+BREWFILE="$BOOTSTRAP_DIR/Brewfile"
 
 section_brew() {
   info "[brew] checking…"
