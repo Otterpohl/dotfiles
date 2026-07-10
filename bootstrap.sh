@@ -173,6 +173,22 @@ section_opencode_configs() {
   info "[opencode] writing configs…"
   mkdir -p "$OC_DIR" "$OC_PLUGINS_DIR" "$OC_DIR/commands"
 
+  # Global config — require permission for shell commands
+  mkdir -p "$HOME/.opencode"
+  if [[ ! -f "$HOME/.opencode/opencode.json" ]]; then
+    cat > "$HOME/.opencode/opencode.json" << 'OCGLOBAL'
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "bash": "ask"
+  }
+}
+OCGLOBAL
+    ok "  global config written"
+  else
+    skip "  global config exists (skipped)"
+  fi
+
   # AGENTS.md
   cat > "$OC_DIR/AGENTS.md" << 'AGENTS'
 # Global Instructions
@@ -203,6 +219,9 @@ AGENTS
 // Managed by ~/.config/bootstrap/setup.sh — edit there, not here
 {
   "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "bash": "ask"
+  },
   "plugin": ["./plugins/crit.ts", "@tarquinen/opencode-smart-title"]
 }
 OCJSON
