@@ -105,7 +105,10 @@ export default function (pi: ExtensionAPI) {
  */
 function formatPreview(toolName: string, input: Record<string, unknown>): string {
   if (toolName === "bash") {
-    return (input.command as string) ?? JSON.stringify(input);
+    const cmd = (input.command as string) ?? JSON.stringify(input);
+    const parts = cmd.split(/(?=&&|\|\||;|\|)/);
+    if (parts.length <= 1) return cmd;
+    return parts.map((p) => "  " + p.trim()).join("\n");
   }
   if (["read", "write", "edit"].includes(toolName)) {
     return (input.path as string) ?? (input.filePath as string) ?? JSON.stringify(input);
