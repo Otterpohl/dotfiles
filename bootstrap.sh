@@ -19,8 +19,6 @@ BOOTSTRAP_DIR="$(cd "$(dirname "$0")" && pwd)"
 # ── paths ──
 ALACRITTY_CFG="$HOME/.config/alacritty/alacritty.toml"
 ZSHRC="$HOME/.zshrc"
-OC_DIR="$HOME/.config/opencode"
-OC_PLUGINS_DIR="$OC_DIR/plugins"
 CARGO_BIN="$HOME/.cargo/bin"
 LOCAL_BIN="$HOME/.local/bin"
 BUN_DIR="$HOME/.bun"
@@ -123,7 +121,7 @@ source \$ZSH/oh-my-zsh.sh
 eval "\$("$LOCAL_BIN/mise" activate zsh)" 2>/dev/null || true
 
 # ── PATH ──
-export PATH="\$HOME/.cargo/bin:\$HOME/.local/bin:\$HOME/.opencode/bin:\$HOME/.bun/bin:/home/linuxbrew/.linuxbrew/bin:\$PATH"
+export PATH="\$HOME/.cargo/bin:\$HOME/.local/bin:\$HOME/.bun/bin:/home/linuxbrew/.linuxbrew/bin:\$PATH"
 
 # ── bun completions ──
 [[ -s "\$HOME/.bun/_bun" ]] && source "\$HOME/.bun/_bun"
@@ -167,69 +165,25 @@ section_herdr() {
 
 
 # ═══════════════════════════════════════════════════════════════
-# 6. permission-gate — Rust permission gate binary
+# 6. pi — AI coding agent
 # ═══════════════════════════════════════════════════════════════
-section_permission_gate() {
-  info "[permission-gate] checking…"
-
-  local GATE_SRC="$HOME/dev/permission-gate"
-  local GATE_BIN="$LOCAL_BIN/permission-gate"
-
-  if [[ ! -x "$GATE_BIN" ]]; then
-    if [[ -d "$GATE_SRC" ]]; then
-      info "  building permission-gate…"
-      cd "$GATE_SRC" && cargo build --release 2>&1 | tail -1
-      mkdir -p "$LOCAL_BIN"
-      cp "$GATE_SRC/target/release/permission-gate" "$GATE_BIN"
-      ok "  permission-gate built and installed"
-    else
-      skip "  source not found at $GATE_SRC, skipping"
-    fi
+section_pi() {
+  info "[pi] checking…"
+  if ! command -v pi &>/dev/null; then
+    info "  installing pi via npm…"
+    npm install -g --ignore-scripts @earendil-works/pi-coding-agent 2>&1 | tail -1
+    ok "  pi installed"
   else
-    skip "  binary exists (skipped)"
+    info "  updating pi…"
+    npm install -g --ignore-scripts @earendil-works/pi-coding-agent 2>&1 | tail -1
+    ok "  pi updated"
   fi
 
-  # Config
-  mkdir -p "$HOME/.config/permission-gate"
-  cat > "$HOME/.config/permission-gate/rules.json" << 'RULES'
-{
-  "rule": [
-    { "tool": "bash", "pattern": "echo *", "action": "allow" },
-    { "tool": "bash", "pattern": "which *", "action": "allow" },
-    { "tool": "bash", "pattern": "ls *", "action": "allow" },
-    { "tool": "bash", "pattern": "git status*", "action": "allow" },
-    { "tool": "webfetch", "pattern": "https://opencode.ai/*", "action": "allow" }
-  ]
-}
-RULES
-  ok "  rules written"
-}
+  # Ensure extensions directory exists
+  mkdir -p "$HOME/.pi/agent/extensions"
 
-# ═══════════════════════════════════════════════════════════════
-# 7. opencode — AI coding agent CLI
-# ═══════════════════════════════════════════════════════════════
-section_opencode_configs() {
-  info "[opencode] writing configs…"
-  mkdir -p "$OC_DIR" "$OC_PLUGINS_DIR" "$OC_DIR/commands"
-
-  # Global config — require permission for shell commands
-  mkdir -p "$HOME/.opencode"
-  if [[ ! -f "$HOME/.opencode/opencode.json" ]]; then
-    cat > "$HOME/.opencode/opencode.json" << 'OCGLOBAL'
-{
-  "$schema": "https://opencode.ai/config.json",
-  "permission": {
-    "bash": "ask"
-  }
-}
-OCGLOBAL
-    ok "  global config written"
-  else
-    skip "  global config exists (skipped)"
-  fi
-
-  # AGENTS.md
-  cat > "$OC_DIR/AGENTS.md" << 'AGENTS'
+  # AGENTS.md — global context file pi loads automatically
+  cat > "$HOME/.pi/agent/AGENTS.md" << 'AGENTS'
 # Global Instructions
 
 ## Communication
@@ -250,98 +204,17 @@ OCGLOBAL
 - Prefer making plans for multi-file changes before editing.
 
 ## Permissions
-- Never install plugins, packages, or modify system config without asking first.
+- Never install packages or modify system config without asking first.
 AGENTS
+  ok "  AGENTS.md written"
 
-  # opencode.jsonc (server)
-  cat > "$OC_DIR/opencode.jsonc" << 'OCJSON'
-// Managed by ~/.config/bootstrap/setup.sh — edit there, not here
-{
-  "$schema": "https://opencode.ai/config.json",
-  "permission": {
-    "bash": "ask"
-  },
-  "plugin": ["./plugins/crit.ts", "@tarquinen/opencode-smart-title"]
-}
-OCJSON
+  # Install pi packages
+  info "  installing pi packages…"
+  pi install npm:@zigai/pi-response-renderer 2>&1 | tail -1 || true
+  pi install npm:@zigai/pi-ui-tweaks 2>&1 | tail -1 || true
+  ok "  pi packages installed"
 
-  # stats command
-  cat > "$OC_DIR/commands/stats.md" << 'CMDSTATS'
----
-description: Show token usage and cost statistics
----
-
-Current usage stats:
-
-!`opencode stats`
-CMDSTATS
-
-  # crit integration
-  if command -v crit &>/dev/null; then
-    cd "$HOME" && crit install opencode 2>/dev/null || true
-    ok "  crit opencode integration installed"
-  fi
-
-  # smart-title plugin
-  if command -v bun &>/dev/null; then
-    bun add -g @tarquinen/opencode-smart-title 2>/dev/null || true
-    ok "  smart-title plugin installed"
-  fi
-
-
-
-  # permission-gate plugin
-  cat > "$OC_PLUGINS_DIR/permission-gate.js" << 'PGPLUGIN'
-export default {
-  id: "permission-gate",
-  tui: async (api) => {
-    api.event.on("permission.asked", async (event) => {
-      const { id, permissionID, sessionID, action, input } = event.properties
-      const proc = Bun.spawn([
-        "permission-gate", "check", action, JSON.stringify(input || {}),
-      ], { stdout: "pipe", stderr: "pipe" })
-      const output = await new Response(proc.stdout).text()
-      const result = output.trim()
-      if (result === "allow") {
-        try {
-          await api.client.session.postSessionByIdPermissionsByPermissionId({
-            path: { id: sessionID, permissionId: permissionID ?? id },
-            body: { action: "allow" },
-          })
-        } catch (e) {
-          console.error("[permission-gate] failed to auto-allow:", e)
-        }
-      } else if (result === "deny") {
-        try {
-          await api.client.session.postSessionByIdPermissionsByPermissionId({
-            path: { id: sessionID, permissionId: permissionID ?? id },
-            body: { action: "deny" },
-          })
-        } catch (e) {
-          console.error("[permission-gate] failed to auto-deny:", e)
-        }
-      }
-    })
-  },
-}
-PGPLUGIN
-
-  # tui.json (TUI)
-  cat > "$OC_DIR/tui.json" << 'TUIJSON'
-// Managed by ~/.config/bootstrap/setup.sh — edit there, not here
-{
-  "$schema": "https://opencode.ai/tui.json",
-  "mouse": true,
-  "keybinds": {
-    "messages_first": "ctrl+g",
-    "messages_last": "ctrl+alt+g",
-    "model_provider_list": "none"
-  },
-  "plugin": ["file:///home/otterpohl/.config/opencode/plugins/permission-gate.js"]
-}
-TUIJSON
-
-  ok  "  configs written"
+  ok "  pi configured"
 }
 
 # ═══════════════════════════════════════════════════════════════
@@ -350,7 +223,7 @@ TUIJSON
 echo ""
 echo "  ┌──────────────────────────────────────────────┐"
 echo "  │  bootstrap: brew + alacritty + zsh + herdr   │"
-echo "  │             + opencode                       │"
+echo "  │             + pi                            │"
 echo "  └──────────────────────────────────────────────┘"
 echo ""
 
@@ -359,8 +232,7 @@ section_brew
 section_alacritty
 section_zsh
 section_herdr
-section_permission_gate
-section_opencode_configs
+section_pi
 
 echo ""
 echo "  ── done ──"
