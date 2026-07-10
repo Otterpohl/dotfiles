@@ -1,0 +1,5 @@
+# Managed by ~/.config/bootstrap/setup.sh — edit there, not here
+[tools]
+rust = "latest"
+bun = "latest"
+herdr = "latest"
