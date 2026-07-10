@@ -167,7 +167,46 @@ section_herdr() {
 
 
 # ═══════════════════════════════════════════════════════════════
-# 6. opencode — AI coding agent CLI
+# 6. permission-gate — Rust permission gate binary
+# ═══════════════════════════════════════════════════════════════
+section_permission_gate() {
+  info "[permission-gate] checking…"
+
+  local GATE_SRC="$HOME/dev/permission-gate"
+  local GATE_BIN="$LOCAL_BIN/permission-gate"
+
+  if [[ ! -x "$GATE_BIN" ]]; then
+    if [[ -d "$GATE_SRC" ]]; then
+      info "  building permission-gate…"
+      cd "$GATE_SRC" && cargo build --release 2>&1 | tail -1
+      mkdir -p "$LOCAL_BIN"
+      cp "$GATE_SRC/target/release/permission-gate" "$GATE_BIN"
+      ok "  permission-gate built and installed"
+    else
+      skip "  source not found at $GATE_SRC, skipping"
+    fi
+  else
+    skip "  binary exists (skipped)"
+  fi
+
+  # Config
+  mkdir -p "$HOME/.config/permission-gate"
+  cat > "$HOME/.config/permission-gate/rules.json" << 'RULES'
+{
+  "rule": [
+    { "tool": "bash", "pattern": "echo *", "action": "allow" },
+    { "tool": "bash", "pattern": "which *", "action": "allow" },
+    { "tool": "bash", "pattern": "ls *", "action": "allow" },
+    { "tool": "bash", "pattern": "git status*", "action": "allow" },
+    { "tool": "webfetch", "pattern": "https://opencode.ai/*", "action": "allow" }
+  ]
+}
+RULES
+  ok "  rules written"
+}
+
+# ═══════════════════════════════════════════════════════════════
+# 7. opencode — AI coding agent CLI
 # ═══════════════════════════════════════════════════════════════
 section_opencode_configs() {
   info "[opencode] writing configs…"
@@ -251,6 +290,42 @@ CMDSTATS
 
 
 
+  # permission-gate plugin
+  cat > "$OC_PLUGINS_DIR/permission-gate.js" << 'PGPLUGIN'
+export default {
+  id: "permission-gate",
+  tui: async (api) => {
+    api.event.on("permission.asked", async (event) => {
+      const { id, permissionID, sessionID, action, input } = event.properties
+      const proc = Bun.spawn([
+        "permission-gate", "check", action, JSON.stringify(input || {}),
+      ], { stdout: "pipe", stderr: "pipe" })
+      const output = await new Response(proc.stdout).text()
+      const result = output.trim()
+      if (result === "allow") {
+        try {
+          await api.client.session.postSessionByIdPermissionsByPermissionId({
+            path: { id: sessionID, permissionId: permissionID ?? id },
+            body: { action: "allow" },
+          })
+        } catch (e) {
+          console.error("[permission-gate] failed to auto-allow:", e)
+        }
+      } else if (result === "deny") {
+        try {
+          await api.client.session.postSessionByIdPermissionsByPermissionId({
+            path: { id: sessionID, permissionId: permissionID ?? id },
+            body: { action: "deny" },
+          })
+        } catch (e) {
+          console.error("[permission-gate] failed to auto-deny:", e)
+        }
+      }
+    })
+  },
+}
+PGPLUGIN
+
   # tui.json (TUI)
   cat > "$OC_DIR/tui.json" << 'TUIJSON'
 // Managed by ~/.config/bootstrap/setup.sh — edit there, not here
@@ -262,6 +337,7 @@ CMDSTATS
     "messages_last": "ctrl+alt+g",
     "model_provider_list": "none"
   },
+  "plugin": ["file:///home/otterpohl/.config/opencode/plugins/permission-gate.js"]
 }
 TUIJSON
 
@@ -283,6 +359,7 @@ section_brew
 section_alacritty
 section_zsh
 section_herdr
+section_permission_gate
 section_opencode_configs
 
 echo ""
