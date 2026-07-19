@@ -147,79 +147,108 @@ async function showJanusDialog(
   toolName: string,
   argsJson: string,
   verdict: string,
-  explanation?: string,
 ): Promise<"allow" | "deny" | undefined> {
   const reason = verdict === "deny" ? "denied by a janus rule" : "not covered by any janus rule";
   const preview = formatPreview(toolName, JSON.parse(argsJson) as Record<string, unknown>);
 
-  const lines: string[] = [];
-  lines.push("Janus approval required");
-  lines.push("");
-  lines.push(`Tool: ${toolName}`);
-  lines.push(`Status: ${reason}`);
-  if (preview) {
-    lines.push("", "Command:", preview);
-  }
-  if (explanation) {
-    lines.push("", "Why:", explanation);
-  }
-
-  const items: SelectItem[] = [
-    { value: "deny", label: "Deny (default)" },
-    { value: "allow", label: "Allow this once" },
-  ];
-
-  if (!explanation) {
-    items.push({ value: "explain", label: "Show explanation" });
-  }
-
   return ctx.ui.custom<"allow" | "deny" | undefined>((tui, theme, _kb, done) => {
     const container = new Container();
 
-    // Subtle top border — non-blue
-    container.addChild(new DynamicBorder((s: string) => theme.fg("dim", s)));
+    let showExplanation = false;
+    let explanation = "";
+    let loadingExplanation = false;
+    let selectedIndex = 0;
+    let selectList: SelectList;
 
-    // Title
-    container.addChild(new Text(theme.bold("Janus approval required"), 1, 1));
-
-    // Body lines
-    for (const line of lines.slice(1)) {
-      if (line === "Why:" || line === "Command:") {
-        container.addChild(new Text(theme.fg("muted", line), 1, 0));
-      } else if (line === preview || line === explanation) {
-        container.addChild(new Text(theme.fg("mdCode", line), 1, 0));
-      } else {
-        container.addChild(new Text(theme.fg("text", line), 1, 0));
-      }
+    function buildItems(): SelectItem[] {
+      return [
+        { value: "deny", label: "Deny (default)" },
+        { value: "allow", label: "Allow this once" },
+        { value: "toggle-explain", label: showExplanation ? "Hide explanation" : "Show explanation" },
+      ];
     }
 
-    container.addChild(new Spacer(1));
+    function createSelectList(): SelectList {
+      const list = new SelectList(buildItems(), 3, {
+        selectedPrefix: (t) => theme.fg("accent", t),
+        selectedText: (t) => theme.fg("accent", t),
+        description: (t) => theme.fg("muted", t),
+        scrollInfo: (t) => theme.fg("dim", t),
+        noMatch: (t) => theme.fg("warning", t),
+      });
+      list.setSelectedIndex(Math.min(selectedIndex, 2));
+      list.onSelectionChange = (item) => {
+        const idx = buildItems().findIndex((i) => i.value === item.value);
+        if (idx >= 0) selectedIndex = idx;
+      };
+      list.onSelect = (item) => {
+        if (item.value === "toggle-explain") {
+          if (showExplanation) {
+            showExplanation = false;
+            rebuild();
+            tui.requestRender();
+          } else {
+            loadingExplanation = true;
+            rebuild();
+            tui.requestRender();
+            fetchExplanation(ctx, bin, toolName, argsJson).then((text) => {
+              explanation = text;
+              loadingExplanation = false;
+              showExplanation = true;
+              rebuild();
+              tui.requestRender();
+            });
+          }
+          return;
+        }
+        done(item.value as "allow" | "deny");
+      };
+      list.onCancel = () => done(undefined);
+      return list;
+    }
 
-    const selectList = new SelectList(items, 2, {
-      selectedPrefix: (t) => theme.fg("accent", t),
-      selectedText: (t) => theme.fg("accent", t),
-      description: (t) => theme.fg("muted", t),
-      scrollInfo: (t) => theme.fg("dim", t),
-      noMatch: (t) => theme.fg("warning", t),
-    });
-    selectList.onSelect = (item) => {
-      if (item.value === "explain") {
-        fetchExplanation(ctx, bin, toolName, argsJson).then((explanation) => {
-          showJanusDialog(ctx, bin, toolName, argsJson, verdict, explanation).then(done);
-        });
-        return;
+    function rebuild() {
+      container.clear();
+
+      // Subtle top border — non-blue
+      container.addChild(new DynamicBorder((s: string) => theme.fg("dim", s)));
+
+      // Title
+      container.addChild(new Text(theme.bold("Janus approval required"), 1, 1));
+
+      // Static body
+      container.addChild(new Text(theme.fg("text", `Tool: ${toolName}`), 1, 0));
+      container.addChild(new Text(theme.fg("text", `Status: ${reason}`), 1, 0));
+      if (preview) {
+        container.addChild(new Text(theme.fg("muted", "Command:"), 1, 0));
+        container.addChild(new Text(theme.fg("mdCode", preview), 1, 0));
       }
-      done(item.value as "allow" | "deny");
-    };
-    selectList.onCancel = () => done(undefined);
-    container.addChild(selectList);
 
-    container.addChild(
-      new Text(theme.fg("dim", "↑↓ navigate  ·  enter select  ·  esc cancel"), 1, 0),
-    );
+      container.addChild(new Spacer(1));
 
-    // Subtle bottom border — non-blue
-    container.addChild(new DynamicBorder((s: string) => theme.fg("dim", s)));
+      // Explanation block (toggled inline, same page)
+      if (showExplanation || loadingExplanation) {
+        container.addChild(new Text(theme.fg("muted", "Why:"), 1, 0));
+        if (loadingExplanation) {
+          container.addChild(new Text(theme.fg("dim", "Loading explanation…"), 1, 0));
+        } else {
+          container.addChild(new Text(theme.fg("mdCode", explanation), 1, 0));
+        }
+        container.addChild(new Spacer(1));
+      }
+
+      selectList = createSelectList();
+      container.addChild(selectList);
+
+      container.addChild(
+        new Text(theme.fg("dim", "↑↓ navigate  ·  enter select  ·  esc cancel"), 1, 0),
+      );
+
+      // Subtle bottom border — non-blue
+      container.addChild(new DynamicBorder((s: string) => theme.fg("dim", s)));
+    }
+
+    rebuild();
 
     return {
       render: (w: number) => container.render(w),
