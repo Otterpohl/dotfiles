@@ -128,7 +128,7 @@ export default function (pi: ExtensionAPI) {
     }
     userApprovedToolCalls.delete(event.toolCallId);
 
-    const note = "[approved by user via Janus]";
+    const note = "[USER APPROVED THIS TOOL CALL — not auto-allowed by Janus]";
     const content = event.content;
     if (content.length > 0 && content[0].type === "text") {
       return {
