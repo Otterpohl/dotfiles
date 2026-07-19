@@ -230,8 +230,12 @@ AGENTS
   ok "  pi packages installed"
 
   # Copy extensions from bootstrap repo
+  # Includes: custom-footer, exit-to-quit, format-bash, janus-gate, questionnaire
   if [[ -d "$BOOTSTRAP_DIR/extensions" ]]; then
     cp -n "$BOOTSTRAP_DIR/extensions/"*.ts "$HOME/.pi/agent/extensions/" 2>/dev/null || true
+    # Ensure the questionnaire clarification tool is installed
+    [[ -f "$BOOTSTRAP_DIR/extensions/questionnaire.ts" ]] && \
+      cp -n "$BOOTSTRAP_DIR/extensions/questionnaire.ts" "$HOME/.pi/agent/extensions/questionnaire.ts" 2>/dev/null || true
     ok "  extensions copied"
   fi
 
