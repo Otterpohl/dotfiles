@@ -14,6 +14,16 @@ HOME="${HOME:-$HOME}"
 CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/bootstrap"
 mkdir -p "$CACHE_DIR"
 
+# ── OS detection ──
+# Returns the /etc/os-release ID (e.g. cachyos, arch, ubuntu); empty on
+# non-Linux or unreadable os-release. Lets sections branch per distro.
+os_id() {
+  [[ -r /etc/os-release ]] || return 0
+  ( . /etc/os-release 2>/dev/null && printf '%s' "${ID:-}" )
+}
+# True if running on CachyOS (ID=cachyos, ID_LIKE=arch).
+is_cachyos() { [[ "$(os_id)" == "cachyos" ]]; }
+
 BOOTSTRAP_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # ── paths ──
@@ -295,14 +305,19 @@ AGENTS
 }
 
 # ═══════════════════════════════════════════════════════════════
-# 8. noctalia — guard terminal theme against recoloring
+# 8. noctalia — guard terminal theme against recoloring (CachyOS only)
 # ═══════════════════════════════════════════════════════════════
-# Noctalia's theme template engine rewrites alacritty.toml / kitty.conf
-# and re-adds an import/include line whenever builtin_ids lists them.
+# Noctalia is the CachyOS desktop shell (top bar, launcher, etc.).
+# Its theme template engine rewrites alacritty.toml / kitty.conf and
+# re-adds an import/include line whenever builtin_ids lists them.
 # We deliberately use alacritty's built-in defaults (see commit 68dd3de),
 # so strip those ids from the Noctalia config to stop it clobbering our
-# terminal theme. Idempotent; safe to re-run.
+# terminal theme. Idempotent; safe to re-run. Skips on non-CachyOS hosts.
 section_noctalia() {
+  if ! is_cachyos; then
+    skip "[noctalia] not CachyOS, skipping (top bar is CachyOS-only)"
+    return
+  fi
   info "[noctalia] guarding terminal theme…"
   local noct_cfg="$HOME/.config/noctalia/config.toml"
   if ! command -v noctalia &>/dev/null || [[ ! -f "$noct_cfg" ]]; then
