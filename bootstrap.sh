@@ -106,6 +106,21 @@ ALACRITTY
 # ═══════════════════════════════════════════════════════════════
 section_zsh() {
   info "[zsh] configuring…"
+
+  # oh-my-zsh — clone if missing (the .zshrc we write sources it)
+  if [[ ! -d "$HOME/.oh-my-zsh" ]]; then
+    info "  cloning oh-my-zsh…"
+    git clone --depth=1 https://github.com/ohmyzsh/ohmyzsh.git "$HOME/.oh-my-zsh"
+  fi
+
+  # Custom otterpohl theme — copied from this repo so the theme is reproducible
+  local theme_dir="$HOME/.oh-my-zsh/custom/themes"
+  mkdir -p "$theme_dir"
+  if [[ -f "$BOOTSTRAP_DIR/zsh/otterpohl.zsh-theme" ]]; then
+    cp -f "$BOOTSTRAP_DIR/zsh/otterpohl.zsh-theme" "$theme_dir/otterpohl.zsh-theme"
+    ok "  otterpohl theme installed"
+  fi
+
   cat > "$ZSHRC" << ZSHRC
 # Managed by ~/.config/bootstrap/setup.sh — edit there, not here
 # bootstrap: do not edit above this line
