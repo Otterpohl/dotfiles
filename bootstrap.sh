@@ -85,8 +85,21 @@ section_brew() {
 section_alacritty() {
   info "[alacritty] configuring…"
   mkdir -p "$(dirname "$ALACRITTY_CFG")"
+
+  # Copy the bundled Catppuccin Mocha theme so the import below resolves
+  local theme_dir
+  theme_dir="$(dirname "$ALACRITTY_CFG")/themes"
+  mkdir -p "$theme_dir"
+  if [[ -f "$BOOTSTRAP_DIR/alacritty/themes/noctalia.toml" ]]; then
+    cp -f "$BOOTSTRAP_DIR/alacritty/themes/noctalia.toml" "$theme_dir/noctalia.toml"
+    ok "  alacritty theme installed"
+  fi
+
   cat > "$ALACRITTY_CFG" << 'ALACRITTY'
 # Managed by ~/.config/bootstrap/setup.sh — edit there, not here
+[general]
+import = ["~/.config/alacritty/themes/noctalia.toml"]
+
 [env]
 TERM = "xterm-256color"
 
