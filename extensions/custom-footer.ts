@@ -14,6 +14,9 @@ export default function (pi: ExtensionAPI) {
 	let turnStartTime = 0;
 	let latestTtft = 0;
 	let turnActive = false;
+	// TTFT baseline = exchange start. turn_start fires once per LLM round-trip
+	// (including every tool-call follow-up), so it must NOT reset the timer.
+	let turnStart = 0;
 	let ticker: ReturnType<typeof setInterval> | null = null;
 
 	function startTicker() {
@@ -34,15 +37,12 @@ export default function (pi: ExtensionAPI) {
 		return `${Math.floor(s / 60)}m${String(Math.floor(s % 60)).padStart(2, "0")}s`;
 	}
 
-	pi.on("turn_start", async () => {
-		turnStartTime = Date.now();
-		latestTtft = 0;
-	});
-
 	// Live elapsed timer for the whole exchange (same window turnstats uses)
 	pi.on("before_agent_start", async () => {
 		turnActive = true;
 		turnStartTime = Date.now();
+		turnStart = turnStartTime;
+		latestTtft = 0;
 		startTicker();
 	});
 
@@ -56,11 +56,11 @@ export default function (pi: ExtensionAPI) {
 		// Capture TTFT on first content chunk of an assistant response
 		if (
 			event.message.role === "assistant" &&
-			turnStartTime > 0 &&
+			turnStart > 0 &&
 			latestTtft === 0 &&
 			event.message.content?.length
 		) {
-			latestTtft = Date.now() - turnStartTime;
+			latestTtft = Date.now() - turnStart;
 			requestRender?.();
 		}
 	});

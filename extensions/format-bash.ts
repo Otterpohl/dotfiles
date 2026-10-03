@@ -1,7 +1,7 @@
 /**
  * Format Bash Chains Extension
  *
- * Renders chained bash commands (&&, ||, ;, |) across multiple lines.
+ * Renders chained bash commands (&&, ||, ;) across multiple lines.
  */
 
 import type { BashToolDetails, ExtensionAPI } from "@earendil-works/pi-coding-agent";
@@ -29,10 +29,28 @@ export default function (pi: ExtensionAPI) {
 			if (parts.length <= 1) {
 				text += theme.fg("accent", command);
 			} else {
-				// Show first part, then each subsequent operator+part on a new line
-				text += theme.fg("accent", parts[0].trim());
-				for (let i = 1; i < parts.length; i++) {
-					text += "\n  " + theme.fg("accent", parts[i].trim());
+				for (let i = 0; i < parts.length; i++) {
+					const part = parts[i].trim();
+					if (i === 0) {
+						text += theme.fg("accent", part);
+					} else {
+						const m = part.match(/^(&&|\|\||;)\s*/);
+						if (m) {
+							// Append operator to end of previous line
+							text += " " + theme.fg("accent", m[1]);
+							const rest = part.slice(m[0].length);
+							if (rest) {
+								// || keeps rest on the same line; && and ; line-feed
+								if (m[1] === "||") {
+									text += " " + theme.fg("accent", rest);
+								} else {
+									text += "\n" + theme.fg("accent", rest);
+								}
+							}
+						} else {
+							text += "\n" + theme.fg("accent", part);
+						}
+					}
 				}
 			}
 			return new Text(text, 0, 0);
