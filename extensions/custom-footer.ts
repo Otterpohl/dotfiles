@@ -19,6 +19,27 @@ export default function (pi: ExtensionAPI) {
 	let turnStart = 0;
 	let ticker: ReturnType<typeof setInterval> | null = null;
 
+	// Per-LLM-call timing: turn_start opens the request (turn_end only fires
+	// *after* tool executions, so it can't be used). message_end for the
+	// assistant message closes the call — before tools run, so the held
+	// duration stays fixed while e.g. a long bash command executes.
+	let callStart = 0;
+	let lastCallMs = 0;
+
+	// Tool-execution timing: first tool_execution_start opens a window,
+	// last tool_execution_end closes it (active-count handles nested/parallel
+	// calls). Between windows the last tool duration is held.
+	let toolStart = 0;
+	let lastToolMs = 0;
+	let activeTools = 0;
+
+	// Held after settle so the trio stays visible between exchanges.
+	let lastTotalMs = 0;
+
+	// Call counters: LLM calls (turns) and tool calls in this exchange.
+	let turnCount = 0;
+	let toolCount = 0;
+
 	function startTicker() {
 		if (ticker) clearInterval(ticker);
 		ticker = setInterval(() => requestRender?.(), 100);
@@ -43,11 +64,50 @@ export default function (pi: ExtensionAPI) {
 		turnStartTime = Date.now();
 		turnStart = turnStartTime;
 		latestTtft = 0;
+		callStart = 0;
+		lastCallMs = 0;
+		toolStart = 0;
+		lastToolMs = 0;
+		activeTools = 0;
+		lastTotalMs = 0;
+		turnCount = 0;
+		toolCount = 0;
 		startTicker();
+	});
+
+	pi.on("turn_start", async () => {
+		turnCount++;
+		callStart = Date.now();
+		requestRender?.();
+	});
+
+	pi.on("message_end", async (event) => {
+		if (event.message.role === "assistant" && callStart > 0) {
+			lastCallMs = Date.now() - callStart;
+			callStart = 0;
+			requestRender?.();
+		}
+	});
+
+	pi.on("tool_execution_start", async () => {
+		if (activeTools === 0) toolStart = Date.now();
+		activeTools++;
+		toolCount++;
+		requestRender?.();
+	});
+
+	pi.on("tool_execution_end", async () => {
+		if (activeTools > 0) activeTools--;
+		if (activeTools === 0 && toolStart > 0) {
+			lastToolMs = Date.now() - toolStart;
+			toolStart = 0;
+		}
+		requestRender?.();
 	});
 
 	pi.on("agent_settled", async () => {
 		turnActive = false;
+		if (turnStartTime > 0) lastTotalMs = Date.now() - turnStartTime;
 		stopTicker();
 		requestRender?.();
 	});
@@ -109,16 +169,41 @@ export default function (pi: ExtensionAPI) {
 					];
 					if (ttft) parts.push(`ttft: ${ttft}`);
 
-					// Extension statuses (e.g. turnstats) on their own line,
-					// like the default footer: sorted by key, sanitized, truncated.
-					// While the agent is running, replace turnstats' "Processing…"
-					// placeholder with a live elapsed timer.
+					// Timing trio on the statuses line: total (whole exchange),
+					// llm (current/last call), tool (current/last tool window).
+					// While running they tick (driven by the 100ms ticker); after
+					// settle the final values are held until the next exchange.
+					const timingParts: string[] = [];
+					if (turnActive && turnStartTime > 0) {
+						timingParts.push(theme.fg("dim", `total: ${fmtElapsed(Date.now() - turnStartTime)}`));
+						if (callStart > 0) {
+							timingParts.push(theme.fg("dim", `llm: ${fmtElapsed(Date.now() - callStart)} (${turnCount})`));
+						} else if (lastCallMs > 0) {
+							timingParts.push(theme.fg("dim", `llm: ${fmtElapsed(lastCallMs)} (${turnCount})`));
+						}
+						if (activeTools > 0 && toolStart > 0) {
+							timingParts.push(theme.fg("dim", `tool: ${fmtElapsed(Date.now() - toolStart)} (${toolCount})`));
+						} else if (lastToolMs > 0) {
+							timingParts.push(theme.fg("dim", `tool: ${fmtElapsed(lastToolMs)} (${toolCount})`));
+						}
+					} else if (lastTotalMs > 0) {
+						timingParts.push(theme.fg("dim", `total: ${fmtElapsed(lastTotalMs)}`));
+						if (lastCallMs > 0) timingParts.push(theme.fg("dim", `llm: ${fmtElapsed(lastCallMs)} (${turnCount})`));
+						if (lastToolMs > 0) timingParts.push(theme.fg("dim", `tool: ${fmtElapsed(lastToolMs)} (${toolCount})`));
+					} else {
+						// Nothing yet this session: show the line with zero values.
+						timingParts.push(theme.fg("dim", "total: 0s"));
+						timingParts.push(theme.fg("dim", "llm: 0s (0)"));
+						timingParts.push(theme.fg("dim", "tool: 0s (0)"));
+					}
+
+					// Extension statuses on their own line, like the default
+					// footer: sorted by key, sanitized, truncated. turn-stats is
+					// excluded entirely — the timing trio is our own replacement.
 					const statuses = Array.from(footerData.getExtensionStatuses().entries())
 						.sort(([a], [b]) => a.localeCompare(b))
 						.map(([key, text]) => {
-							if (key === "turn-stats" && turnActive && turnStartTime > 0) {
-								return theme.fg("dim", `⏱ ${fmtElapsed(Date.now() - turnStartTime)}`);
-							}
+							if (key === "turn-stats") return "";
 							return text
 								.replace(/[\r\n\t]/g, " ")
 								.replace(/ +/g, " ")
@@ -128,8 +213,14 @@ export default function (pi: ExtensionAPI) {
 					const lines = [
 						truncateToWidth(theme.fg("dim", parts.join("  -  ")), width),
 					];
-					if (statuses.length > 0) {
-						lines.push(truncateToWidth(statuses.join(" "), width, theme.fg("dim", "...")));
+					const statusParts = [...timingParts, ...statuses.filter((s) => s !== "")];
+					if (statusParts.length > 0) {
+						// Dim the separators too — a raw join renders them in the
+						// default (white) text color.
+						const joined = statusParts
+							.map((p, i) => (i > 0 ? theme.fg("dim", "  -  ") + p : p))
+							.join("");
+						lines.push(truncateToWidth(joined, width, theme.fg("dim", "...")));
 					}
 					return lines;
 				},
