@@ -18,6 +18,9 @@ Declarative dev tool versions (rust, bun). Add tools here after `mise use -g`.
 ## Janus (`~/Janus`)
 Permission gate for pi tool calls. Cloned from `Otterpohl/Janus`, built with cargo, and the bundled pi extension installed via `janus install`. Rules live in `~/.config/janus/rules.json` (manage manually with `janus add`).
 
+## Herdr (`~/.config/herdr/config.toml`)
+Terminal multiplexer. Config written by `bootstrap.sh` (theme, sidebar, toasts).
+
 ## Bootstrap Workflow
 Whenever installing a new tool or editing a dotfile during a session, update the corresponding file under `~/.config/bootstrap/`:
 - Brew packages → `Brewfile`

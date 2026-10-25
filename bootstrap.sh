@@ -188,6 +188,39 @@ section_herdr() {
   if [[ -n "$herdr_bin" ]]; then
     ln -sf "$herdr_bin" "$LOCAL_BIN/herdr"
   fi
+
+  mkdir -p "$HOME/.config/herdr"
+  cat > "$HOME/.config/herdr/config.toml" << 'HERDR'
+# Managed by ~/.config/bootstrap/setup.sh — edit there, not here
+onboarding = false
+
+[ui.sound]
+enabled = false
+
+[theme]
+name = "nord"
+auto_switch = false
+
+[ui]
+agent_panel_sort = "spaces"
+show_agent_labels_on_pane_borders = false
+sidebar_max_width = 100
+prompt_new_tab_name = false
+tab_bar_position = "bottom"
+
+[ui.toast]
+delivery = "herdr"
+
+[ui.sidebar.agents]
+row_gap = 0
+rows = [
+  ["state_icon", "workspace", "tab"],
+]
+
+[ui.sidebar.spaces]
+row_gap = 0
+HERDR
+  ok "  herdr config written"
   ok "  herdr installed"
 }
 
