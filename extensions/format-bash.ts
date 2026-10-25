@@ -18,8 +18,8 @@ export default function (pi: ExtensionAPI) {
 		description: originalBash.description,
 		parameters: originalBash.parameters,
 
-		async execute(toolCallId, params, signal, onUpdate) {
-			return originalBash.execute(toolCallId, params, signal, onUpdate);
+		async execute(toolCallId, params, signal, onUpdate, ctx) {
+			return originalBash.execute(toolCallId, params, signal, onUpdate, ctx);
 		},
 
 		renderCall(args, theme, _context) {
