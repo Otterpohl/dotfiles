@@ -242,10 +242,10 @@ onboarding = false
 enabled = false
 
 [theme]
-# Follow the host terminal's light/dark appearance: mocha when dark, latte when light. name is
-# the base the appearance overrides layer onto; with the system dark, mocha is the base.
+# Pinned to mocha: auto_switch answers pane apps' OSC 11 background queries with the active
+# theme's bg, so a latte moment made mill's auto palette paint a near-white selection band.
 name = "catppuccin-mocha"
-auto_switch = true
+auto_switch = false
 dark_name = "catppuccin-mocha"
 light_name = "catppuccin-latte"
 
