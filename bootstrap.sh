@@ -263,6 +263,8 @@ delivery = "herdr"
 row_gap = 0
 rows = [
   ["state_icon", "workspace", "tab"],
+  # The $gate token mill's driver reports on agent panes whose work is waiting on you.
+  [{ token = "$gate", fg = "#cba6f7", bold = true }],
 ]
 
 [ui.sidebar.spaces]

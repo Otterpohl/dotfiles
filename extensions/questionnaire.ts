@@ -50,8 +50,10 @@ interface QuestionnaireResult {
 
 // Schema
 const QuestionOptionSchema = Type.Object({
-	value: Type.String({ description: "The value returned when selected" }),
-	label: Type.String({ description: "Display label for the option" }),
+	value: Type.Optional(
+		Type.String({ description: "The value returned when selected; omit it to use the label as the value" }),
+	),
+	label: Type.String({ description: "Display label for the option; also the value when value is omitted" }),
 	description: Type.Optional(Type.String({ description: "Optional description shown below label" })),
 });
 
@@ -86,7 +88,7 @@ export default function questionnaire(pi: ExtensionAPI) {
 		name: "questionnaire",
 		label: "Questionnaire",
 		description:
-			"Ask the user one or more questions. Use for clarifying requirements, getting preferences, or confirming decisions. For single questions, shows a simple option list. For multiple questions, shows a tab-based interface.",
+			"Ask the user one or more questions. Use for clarifying requirements, getting preferences, or confirming decisions. For single questions, shows a simple option list. For multiple questions, shows a tab-based interface. Options need a label; the value is optional and defaults to the label.",
 		parameters: QuestionnaireParams,
 
 		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
@@ -102,6 +104,8 @@ export default function questionnaire(pi: ExtensionAPI) {
 				...q,
 				label: q.label || `Q${i + 1}`,
 				allowOther: q.allowOther !== false,
+				// A label-only option is the common call shape, and its label is the value.
+				options: q.options.map((o) => ({ ...o, value: o.value ?? o.label })),
 			}));
 
 			const isMulti = questions.length > 1;
