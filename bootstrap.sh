@@ -108,6 +108,50 @@ program = "/home/otterpohl/.local/bin/herdr"
 bindings = [
   { key = "V", mods = "Control", action = "Paste" },
 ]
+
+# Catppuccin Latte: light background, so mill's TUI (palette = auto) paints latte too and
+# everything matches.
+[colors.primary]
+background = "#eff1f5"
+foreground = "#4c4f69"
+dim_foreground = "#8c8fa1"
+bright_foreground = "#4c4f69"
+
+[colors.cursor]
+text = "#eff1f5"
+cursor = "#dc8a78"
+
+[colors.selection]
+text = "#4c4f69"
+background = "#dc8a78"
+
+[colors.normal]
+black = "#5c5f77"
+red = "#d20f39"
+green = "#40a02b"
+yellow = "#df8e1d"
+blue = "#1e66f5"
+magenta = "#8839ef"
+cyan = "#179299"
+white = "#acb0be"
+
+[colors.bright]
+black = "#6c6f85"
+red = "#d20f39"
+green = "#40a02b"
+yellow = "#df8e1d"
+blue = "#1e66f5"
+magenta = "#8839ef"
+cyan = "#179299"
+white = "#bcc0cc"
+
+[[colors.indexed_colors]]
+index = 16
+color = "#fe640b"
+
+[[colors.indexed_colors]]
+index = 17
+color = "#dc8a78"
 ALACRITTY
   ok "  alacritty config written"
 }
@@ -198,8 +242,12 @@ onboarding = false
 enabled = false
 
 [theme]
-name = "nord"
-auto_switch = false
+# Follow the host terminal's light/dark appearance: latte when the terminal is light, mocha
+# when dark. name is the base the appearance overrides layer onto.
+name = "catppuccin-latte"
+auto_switch = true
+dark_name = "catppuccin-mocha"
+light_name = "catppuccin-latte"
 
 [ui]
 agent_panel_sort = "spaces"
