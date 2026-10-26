@@ -109,49 +109,49 @@ bindings = [
   { key = "V", mods = "Control", action = "Paste" },
 ]
 
-# Catppuccin Latte: light background, so mill's TUI (palette = auto) paints latte too and
+# Catppuccin Mocha: dark background, so mill's TUI (palette = auto) paints mocha too and
 # everything matches.
 [colors.primary]
-background = "#eff1f5"
-foreground = "#4c4f69"
-dim_foreground = "#8c8fa1"
-bright_foreground = "#4c4f69"
+background = "#1e1e2e"
+foreground = "#cdd6f4"
+dim_foreground = "#7f849c"
+bright_foreground = "#cdd6f4"
 
 [colors.cursor]
-text = "#eff1f5"
-cursor = "#dc8a78"
+text = "#1e1e2e"
+cursor = "#f5e0dc"
 
 [colors.selection]
-text = "#4c4f69"
-background = "#dc8a78"
+text = "#cdd6f4"
+background = "#45475a"
 
 [colors.normal]
-black = "#5c5f77"
-red = "#d20f39"
-green = "#40a02b"
-yellow = "#df8e1d"
-blue = "#1e66f5"
-magenta = "#8839ef"
-cyan = "#179299"
-white = "#acb0be"
+black = "#45475a"
+red = "#f38ba8"
+green = "#a6e3a1"
+yellow = "#f9e2af"
+blue = "#89b4fa"
+magenta = "#f5c2e7"
+cyan = "#94e2d5"
+white = "#bac2de"
 
 [colors.bright]
-black = "#6c6f85"
-red = "#d20f39"
-green = "#40a02b"
-yellow = "#df8e1d"
-blue = "#1e66f5"
-magenta = "#8839ef"
-cyan = "#179299"
-white = "#bcc0cc"
+black = "#585b70"
+red = "#f38ba8"
+green = "#a6e3a1"
+yellow = "#f9e2af"
+blue = "#89b4fa"
+magenta = "#f5c2e7"
+cyan = "#94e2d5"
+white = "#a6adc8"
 
 [[colors.indexed_colors]]
 index = 16
-color = "#fe640b"
+color = "#fab387"
 
 [[colors.indexed_colors]]
 index = 17
-color = "#dc8a78"
+color = "#f5e0dc"
 ALACRITTY
   ok "  alacritty config written"
 }
@@ -242,9 +242,9 @@ onboarding = false
 enabled = false
 
 [theme]
-# Follow the host terminal's light/dark appearance: latte when the terminal is light, mocha
-# when dark. name is the base the appearance overrides layer onto.
-name = "catppuccin-latte"
+# Follow the host terminal's light/dark appearance: mocha when dark, latte when light. name is
+# the base the appearance overrides layer onto; with the system dark, mocha is the base.
+name = "catppuccin-mocha"
 auto_switch = true
 dark_name = "catppuccin-mocha"
 light_name = "catppuccin-latte"
