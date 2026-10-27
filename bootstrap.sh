@@ -370,11 +370,6 @@ section_pi() {
 AGENTS
   ok "  AGENTS.md written"
 
-  # Install pi packages
-  info "  installing pi packages…"
-  pi install npm:@zigai/pi-mention-project 2>&1 | tail -1 || true
-  ok "  pi packages installed"
-
   # Copy extensions from bootstrap repo
   # Includes: custom-footer, exit-to-quit, format-bash, questionnaire
   # (janus-gate is installed by `janus install` in section_janus, not copied here)
