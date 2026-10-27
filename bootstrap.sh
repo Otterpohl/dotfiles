@@ -352,6 +352,16 @@ AGENTS
       npm cache clean --force)
   fi
 
+  # pi-turn-stats — per-exchange turn duration, token and cost stats (stream card, status
+  # chip, /turnstats command), the one mill's sandbox image ships too. No runtime deps, so
+  # pack and untar only; keep in sync with mill config [versions].
+  local STATS_DIR="$HOME/.pi/agent/extensions/pi-turn-stats"
+  if [[ ! -d "$STATS_DIR" ]]; then
+    mkdir -p "$STATS_DIR"
+    (cd "$STATS_DIR" && npm pack --silent "@marshal/pi-turn-stats@0.1.11" && \
+      tar -xzf ./*.tgz --strip-components=1 && rm ./*.tgz && npm cache clean --force)
+  fi
+
 
     cp -n "$BOOTSTRAP_DIR/extensions/"*.ts "$HOME/.pi/agent/extensions/" 2>/dev/null || true
     # Ensure the questionnaire clarification tool is installed
