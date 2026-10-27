@@ -32,7 +32,6 @@ ZSHRC="$HOME/.zshrc"
 CARGO_BIN="$HOME/.cargo/bin"
 LOCAL_BIN="$HOME/.local/bin"
 BUN_DIR="$HOME/.bun"
-JANUS_DIR="$HOME/Janus"
 
 # ═══════════════════════════════════════════════════════════════
 # 1. mise — tool version manager
@@ -276,42 +275,9 @@ HERDR
 
 
 
-# ═══════════════════════════════════════════════════════════════
-# 6. janus — permission gate for pi tool calls
-# ═══════════════════════════════════════════════════════════════
-section_janus() {
-  info "[janus] checking…"
-
-  # Cargo comes from mise's rust toolchain (installed in section_mise).
-  export PATH="$CARGO_BIN:$PATH"
-  if ! command -v cargo &>/dev/null; then
-    info "  cargo not found, skipping (run after mise installs rust)"
-    return 1
-  fi
-
-  # Clone or update the Janus repo
-  if [[ ! -d "$JANUS_DIR" ]]; then
-    info "  cloning Otterpohl/Janus…"
-    gh repo clone Otterpohl/Janus "$JANUS_DIR"
-  else
-    (cd "$JANUS_DIR" && git pull --ff-only 2>/dev/null || true)
-  fi
-
-  # Build and install the janus binary into ~/.cargo/bin (on PATH via .zshrc)
-  info "  building & installing janus…"
-  cargo install --path "$JANUS_DIR" --locked 2>&1 | tail -2
-
-  # Install the bundled pi extension (overwrites any stale copy)
-  if command -v janus &>/dev/null; then
-    janus install --force
-    ok "  pi extension installed"
-  else
-    info "  janus not on PATH after install; extension not installed"
-  fi
-}
 
 # ═══════════════════════════════════════════════════════════════
-# 7. pi — AI coding agent
+# 6. pi — AI coding agent
 # ═══════════════════════════════════════════════════════════════
 section_pi() {
   info "[pi] checking…"
@@ -372,7 +338,6 @@ AGENTS
 
   # Copy extensions from bootstrap repo
   # Includes: custom-footer, exit-to-quit, format-bash, questionnaire
-  # (janus-gate is installed by `janus install` in section_janus, not copied here)
   if [[ -d "$BOOTSTRAP_DIR/extensions" ]]; then
 
   # pi-hashline-edit-pro — the hash-anchored read/edit/grep replacement mill's sandboxes use.
@@ -399,7 +364,7 @@ AGENTS
 }
 
 # ═══════════════════════════════════════════════════════════════
-# 8. noctalia — guard terminal theme against recoloring (CachyOS only)
+# 7. noctalia — guard terminal theme against recoloring (CachyOS only)
 # ═══════════════════════════════════════════════════════════════
 # Noctalia is the CachyOS desktop shell (top bar, launcher, etc.).
 # Its theme template engine rewrites alacritty.toml / kitty.conf and
@@ -441,7 +406,7 @@ section_noctalia() {
 echo ""
 echo "  ┌──────────────────────────────────────────────┐"
 echo "  │  bootstrap: brew + alacritty + zsh + herdr   │"
-echo "  │             + janus + pi                    │"
+echo "  │             + pi                            │"
 echo "  └──────────────────────────────────────────────┘"
 echo ""
 
@@ -450,7 +415,6 @@ section_brew
 section_alacritty
 section_zsh
 section_herdr
-section_janus
 section_pi
 section_noctalia
 

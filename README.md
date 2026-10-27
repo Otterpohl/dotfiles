@@ -15,9 +15,6 @@ Declarative package list. Add new tools here after `brew install`.
 ## Mise (`~/.config/bootstrap/mise.toml`)
 Declarative dev tool versions (rust, bun). Add tools here after `mise use -g`.
 
-## Janus (`~/Janus`)
-Permission gate for pi tool calls. Cloned from `Otterpohl/Janus`, built with cargo, and the bundled pi extension installed via `janus install`. Rules live in `~/.config/janus/rules.json` (manage manually with `janus add`).
-
 ## Herdr (`~/.config/herdr/config.toml`)
 Terminal multiplexer. Config written by `bootstrap.sh` (theme, sidebar, toasts).
 
@@ -25,5 +22,4 @@ Terminal multiplexer. Config written by `bootstrap.sh` (theme, sidebar, toasts).
 Whenever installing a new tool or editing a dotfile during a session, update the corresponding file under `~/.config/bootstrap/`:
 - Brew packages → `Brewfile`
 - Mise tools → `mise.toml`
-- Janus rules → `~/.config/janus/rules.json` (then `janus add` to persist a decision)
 - Dotfiles/configs → `setup.sh`
