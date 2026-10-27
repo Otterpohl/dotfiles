@@ -337,7 +337,7 @@ AGENTS
   ok "  AGENTS.md written"
 
   # Copy extensions from bootstrap repo
-  # Includes: custom-footer, exit-to-quit, format-bash, questionnaire
+  # Includes: custom-footer, exit-to-quit, questionnaire
   if [[ -d "$BOOTSTRAP_DIR/extensions" ]]; then
 
   # pi-hashline-edit-pro — the hash-anchored read/edit/grep replacement mill's sandboxes use.
