@@ -374,6 +374,20 @@ AGENTS
   # Includes: custom-footer, exit-to-quit, format-bash, questionnaire
   # (janus-gate is installed by `janus install` in section_janus, not copied here)
   if [[ -d "$BOOTSTRAP_DIR/extensions" ]]; then
+
+  # pi-hashline-edit-pro — the hash-anchored read/edit/grep replacement mill's sandboxes use.
+  # Installed the same way mill's sandbox image installs it (npm pack, peers omitted; its
+  # imports of pi resolve through pi itself). Keep in sync with mill config [versions].
+  local EXT_DIR="$HOME/.pi/agent/extensions/pi-hashline-edit-pro"
+  if [[ ! -d "$EXT_DIR/node_modules" ]]; then
+    mkdir -p "$EXT_DIR"
+    (cd "$EXT_DIR" && npm pack --silent "pi-hashline-edit-pro@7.1.0" && \
+      tar -xzf ./*.tgz --strip-components=1 && rm ./*.tgz && \
+      npm install --silent --omit=dev --omit=peer --ignore-scripts --no-audit --no-fund && \
+      npm cache clean --force)
+  fi
+
+
     cp -n "$BOOTSTRAP_DIR/extensions/"*.ts "$HOME/.pi/agent/extensions/" 2>/dev/null || true
     # Ensure the questionnaire clarification tool is installed
     [[ -f "$BOOTSTRAP_DIR/extensions/questionnaire.ts" ]] && \
