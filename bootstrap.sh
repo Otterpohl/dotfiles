@@ -319,10 +319,25 @@ section_pi() {
   cat > "$HOME/.pi/agent/AGENTS.md" << 'AGENTS'
 # Global Instructions
 
+## Feature control
+- The user has FULL control over all features and visual/behavioural work.
+  Never add features, visuals, or behaviour changes on your own initiative -
+  propose first, let the user decide, and follow their call even if they
+  reject something you think is an improvement.
+
 ## Communication
 - Be concise. Short answers are preferred.
 - Explain what you're doing and why before running commands.
 - Use bullet points for multiple items.
+- Follow the asd-ste100 skill (`~/.agents/skills/asd-ste100/SKILL.md`) for all
+  responses. Use its STE-flavored mode for conversational replies; use Strict
+  mode only when the user asks for formal or technical text.
+
+## Questions
+- Number questions that belong together: 1, 2, 3, one decision per number.
+- Divergent questions get asked separately or nested (1a, 1b).
+- Anything waiting for my ack or answer gets styled per the reply text
+  colouring system section: magenta; emergencies bold red.
 
 ## Code
 - Prefer simple, readable code over clever/optimized.
