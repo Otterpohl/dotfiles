@@ -28,6 +28,7 @@ BOOTSTRAP_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # ── paths ──
 ALACRITTY_CFG="$HOME/.config/alacritty/alacritty.toml"
+GHOSTTY_CFG="$HOME/.config/ghostty/config.ghostty"
 ZSHRC="$HOME/.zshrc"
 CARGO_BIN="$HOME/.cargo/bin"
 LOCAL_BIN="$HOME/.local/bin"
@@ -156,7 +157,34 @@ ALACRITTY
 }
 
 # ═══════════════════════════════════════════════════════════════
-# 4. zsh — shell config
+# 4. ghostty — terminal emulator (mirror of the alacritty config)
+# ═══════════════════════════════════════════════════════════════
+section_ghostty() {
+  info "[ghostty] configuring…"
+  mkdir -p "$(dirname "$GHOSTTY_CFG")"
+
+  cat > "$GHOSTTY_CFG" << 'GHOSTTY'
+# Managed by bootstrap.sh — this file mirrors ~/.config/alacritty/alacritty.toml
+# (Catppuccin Mocha); edit there, not here, and keep both in sync.
+
+# [env] TERM
+term = xterm-256color
+
+# [terminal.shell]
+command = /home/otterpohl/.local/bin/herdr
+
+# [keyboard] Ctrl+V = Paste
+keybind = ctrl+v=paste_from_clipboard
+
+# Alacritty-like defaults: no padding, no cursor blink
+window-padding-x = 0
+window-padding-y = 0
+cursor-style-blink = false
+GHOSTTY
+  ok "  ghostty config written"
+}
+# ═══════════════════════════════════════════════════════════════
+# 5. zsh — shell config
 # ═══════════════════════════════════════════════════════════════
 section_zsh() {
   info "[zsh] configuring…"
@@ -219,7 +247,7 @@ ZSHRC
 }
 
 # ═══════════════════════════════════════════════════════════════
-# 5. herdr — terminal multiplexer
+# 6. herdr — terminal multiplexer
 # ═══════════════════════════════════════════════════════════════
 section_herdr() {
   info "[herdr] installing via mise…"
@@ -282,7 +310,7 @@ HERDR
 
 
 # ═══════════════════════════════════════════════════════════════
-# 6. pi — AI coding agent
+# 7. pi — AI coding agent
 # ═══════════════════════════════════════════════════════════════
 section_pi() {
   info "[pi] checking…"
@@ -394,7 +422,7 @@ AGENTS
 }
 
 # ═══════════════════════════════════════════════════════════════
-# 7. noctalia — guard terminal theme against recoloring (CachyOS only)
+# 8. noctalia — guard terminal theme against recoloring (CachyOS only)
 # ═══════════════════════════════════════════════════════════════
 # Noctalia is the CachyOS desktop shell (top bar, launcher, etc.).
 # Its theme template engine rewrites alacritty.toml / kitty.conf and
@@ -436,13 +464,14 @@ section_noctalia() {
 echo ""
 echo "  ┌──────────────────────────────────────────────┐"
 echo "  │  bootstrap: brew + alacritty + zsh + herdr   │"
-echo "  │             + pi                            │"
+echo "  │             + ghostty + pi                   │"
 echo "  └──────────────────────────────────────────────┘"
 echo ""
 
 section_mise
 section_brew
 section_alacritty
+section_ghostty
 section_zsh
 section_herdr
 section_pi
