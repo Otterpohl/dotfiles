@@ -180,6 +180,10 @@ keybind = ctrl+v=paste_from_clipboard
 window-padding-x = 0
 window-padding-y = 0
 cursor-style-blink = false
+
+# Links are clickable on hover with Cmd held (macOS); not reconfigurable in Ghostty 1.4
+link-url = true
+link-osc8 = true
 GHOSTTY
   ok "  ghostty config written"
 }
