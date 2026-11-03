@@ -425,7 +425,7 @@ AGENTS
 # 8. noctalia — guard terminal theme against recoloring (CachyOS only)
 # ═══════════════════════════════════════════════════════════════
 # Noctalia is the CachyOS desktop shell (top bar, launcher, etc.).
-# Its theme template engine rewrites alacritty.toml / kitty.conf and
+# Its theme template engine rewrites terminal configs (alacritty, kitty, ghostty) and
 # re-adds an import/include line whenever builtin_ids lists them.
 # We deliberately use alacritty's built-in defaults (see commit 68dd3de),
 # so strip those ids from the Noctalia config to stop it clobbering our
@@ -441,18 +441,18 @@ section_noctalia() {
     skip "  noctalia not present, nothing to do"
     return
   fi
-  # Remove "alacritty" / "kitty" (mid-list or trailing) from the
+  # Remove "alacritty" / "kitty" / "ghostty" (mid-list or trailing) from the
   # builtin_ids array. Only matches on the builtin_ids line.
   if grep -qE '^[[:space:]]*builtin_ids[[:space:]]*=' "$noct_cfg" &&
-     grep -qE '"(alacritty|kitty)"' "$noct_cfg"; then
+     grep -qE '"(alacritty|kitty|ghostty)"' "$noct_cfg"; then
     sed -i -E '/^[[:space:]]*builtin_ids[[:space:]]*=/{
-      s/"(alacritty|kitty)"[[:space:]]*,[[:space:]]*//g
-      s/,[[:space:]]*"(alacritty|kitty)"//g
+      s/"(alacritty|kitty|ghostty)"[[:space:]]*,[[:space:]]*//g
+      s/,[[:space:]]*"(alacritty|kitty|ghostty)"//g
     }' "$noct_cfg"
     if pgrep -x noctalia >/dev/null 2>&1; then
       noctalia msg config-reload >/dev/null 2>&1 || true
     fi
-    ok "  stripped alacritty/kitty from noctalia builtin_ids"
+    ok "  stripped alacritty/kitty/ghostty from noctalia builtin_ids"
   else
     skip "  noctalia already safe"
   fi
