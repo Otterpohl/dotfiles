@@ -110,7 +110,7 @@ command = /home/otterpohl/.local/bin/herdr
 keybind = ctrl+v=paste_from_clipboard
 
 # Ghostty ships this theme; it matches the alacritty palette mill's TUI was tuned against
-theme = catppuccin-mocha
+theme = Catppuccin Mocha
 
 # Minimal defaults: no padding, no cursor blink
 window-padding-x = 0
