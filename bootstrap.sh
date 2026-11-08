@@ -27,7 +27,6 @@ is_cachyos() { [[ "$(os_id)" == "cachyos" ]]; }
 BOOTSTRAP_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # ── paths ──
-ALACRITTY_CFG="$HOME/.config/alacritty/alacritty.toml"
 GHOSTTY_CFG="$HOME/.config/ghostty/config.ghostty"
 ZSHRC="$HOME/.zshrc"
 CARGO_BIN="$HOME/.cargo/bin"
@@ -89,83 +88,17 @@ section_brew() {
   fi
 }
 
-# ═══════════════════════════════════════════════════════════════
-# 3. alacritty — terminal emulator
-# ═══════════════════════════════════════════════════════════════
-section_alacritty() {
-  info "[alacritty] configuring…"
-  mkdir -p "$(dirname "$ALACRITTY_CFG")"
-
-  cat > "$ALACRITTY_CFG" << 'ALACRITTY'
-# Managed by ~/.config/bootstrap/setup.sh — edit there, not here
-[env]
-TERM = "xterm-256color"
-
-[terminal.shell]
-program = "/home/otterpohl/.local/bin/herdr"
-
-[keyboard]
-bindings = [
-  { key = "V", mods = "Control", action = "Paste" },
-]
-
-# Catppuccin Mocha: dark background, so mill's TUI (palette = auto) paints mocha too and
-# everything matches.
-[colors.primary]
-background = "#1e1e2e"
-foreground = "#cdd6f4"
-dim_foreground = "#7f849c"
-bright_foreground = "#cdd6f4"
-
-[colors.cursor]
-text = "#1e1e2e"
-cursor = "#f5e0dc"
-
-[colors.selection]
-text = "#cdd6f4"
-background = "#45475a"
-
-[colors.normal]
-black = "#45475a"
-red = "#f38ba8"
-green = "#a6e3a1"
-yellow = "#f9e2af"
-blue = "#89b4fa"
-magenta = "#f5c2e7"
-cyan = "#94e2d5"
-white = "#bac2de"
-
-[colors.bright]
-black = "#585b70"
-red = "#f38ba8"
-green = "#a6e3a1"
-yellow = "#f9e2af"
-blue = "#89b4fa"
-magenta = "#f5c2e7"
-cyan = "#94e2d5"
-white = "#a6adc8"
-
-[[colors.indexed_colors]]
-index = 16
-color = "#fab387"
-
-[[colors.indexed_colors]]
-index = 17
-color = "#f5e0dc"
-ALACRITTY
-  ok "  alacritty config written"
-}
 
 # ═══════════════════════════════════════════════════════════════
-# 4. ghostty — terminal emulator (mirror of the alacritty config)
+# 3. ghostty — terminal emulator
 # ═══════════════════════════════════════════════════════════════
 section_ghostty() {
   info "[ghostty] configuring…"
   mkdir -p "$(dirname "$GHOSTTY_CFG")"
 
   cat > "$GHOSTTY_CFG" << 'GHOSTTY'
-# Managed by bootstrap.sh — this file mirrors ~/.config/alacritty/alacritty.toml
-# (Catppuccin Mocha); edit there, not here, and keep both in sync.
+# Managed by bootstrap.sh — edit there, not here.
+# Catppuccin Mocha: dark background, so everything matches herdr and mill's TUI.
 
 # [env] TERM
 term = xterm-256color
@@ -176,7 +109,10 @@ command = /home/otterpohl/.local/bin/herdr
 # [keyboard] Ctrl+V = Paste
 keybind = ctrl+v=paste_from_clipboard
 
-# Alacritty-like defaults: no padding, no cursor blink
+# Ghostty ships this theme; it matches the alacritty palette mill's TUI was tuned against
+theme = catppuccin-mocha
+
+# Minimal defaults: no padding, no cursor blink
 window-padding-x = 0
 window-padding-y = 0
 cursor-style-blink = false
@@ -188,8 +124,7 @@ GHOSTTY
   ok "  ghostty config written"
 }
 # ═══════════════════════════════════════════════════════════════
-# 5. zsh — shell config
-# ═══════════════════════════════════════════════════════════════
+# 4. zsh — shell config
 section_zsh() {
   info "[zsh] configuring…"
 
@@ -251,12 +186,11 @@ ZSHRC
 }
 
 # ═══════════════════════════════════════════════════════════════
-# 6. herdr — terminal multiplexer
-# ═══════════════════════════════════════════════════════════════
+# 5. herdr — terminal multiplexer
 section_herdr() {
   info "[herdr] installing via mise…"
   mise install herdr 2>&1 | while IFS= read -r line; do echo "    $line"; done
-  # Symlink into ~/.local/bin so alacritty (which doesn't go through mise shims) can find it
+  # Symlink into ~/.local/bin so the terminal's shell (which doesn't go through mise shims) can find it
   mkdir -p "$LOCAL_BIN"
   local herdr_bin
   herdr_bin="$(mise which herdr 2>/dev/null)"
@@ -314,7 +248,7 @@ HERDR
 
 
 # ═══════════════════════════════════════════════════════════════
-# 7. pi — AI coding agent
+# 6. pi — AI coding agent
 # ═══════════════════════════════════════════════════════════════
 section_pi() {
   info "[pi] checking…"
@@ -426,12 +360,12 @@ AGENTS
 }
 
 # ═══════════════════════════════════════════════════════════════
-# 8. noctalia — guard terminal theme against recoloring (CachyOS only)
+# 7. noctalia — guard terminal theme against recoloring (CachyOS only)
 # ═══════════════════════════════════════════════════════════════
 # Noctalia is the CachyOS desktop shell (top bar, launcher, etc.).
-# Its theme template engine rewrites terminal configs (alacritty, kitty, ghostty) and
+# Its theme template engine rewrites terminal configs (kitty, ghostty) and
 # re-adds an import/include line whenever builtin_ids lists them.
-# We deliberately use alacritty's built-in defaults (see commit 68dd3de),
+# We deliberately use ghostty's built-in defaults (commit 68dd3de),
 # so strip those ids from the Noctalia config to stop it clobbering our
 # terminal theme. Idempotent; safe to re-run. Skips on non-CachyOS hosts.
 section_noctalia() {
@@ -445,18 +379,18 @@ section_noctalia() {
     skip "  noctalia not present, nothing to do"
     return
   fi
-  # Remove "alacritty" / "kitty" / "ghostty" (mid-list or trailing) from the
+  # Remove "kitty" / "ghostty" (mid-list or trailing) from the
   # builtin_ids array. Only matches on the builtin_ids line.
   if grep -qE '^[[:space:]]*builtin_ids[[:space:]]*=' "$noct_cfg" &&
-     grep -qE '"(alacritty|kitty|ghostty)"' "$noct_cfg"; then
+     grep -qE '"(kitty|ghostty)"' "$noct_cfg"; then
     sed -i -E '/^[[:space:]]*builtin_ids[[:space:]]*=/{
-      s/"(alacritty|kitty|ghostty)"[[:space:]]*,[[:space:]]*//g
-      s/,[[:space:]]*"(alacritty|kitty|ghostty)"//g
+      s/"(kitty|ghostty)"[[:space:]]*,[[:space:]]*//g
+      s/,[[:space:]]*"(kitty|ghostty)"//g
     }' "$noct_cfg"
     if pgrep -x noctalia >/dev/null 2>&1; then
       noctalia msg config-reload >/dev/null 2>&1 || true
     fi
-    ok "  stripped alacritty/kitty/ghostty from noctalia builtin_ids"
+    ok "  stripped kitty/ghostty from noctalia builtin_ids"
   else
     skip "  noctalia already safe"
   fi
@@ -467,14 +401,13 @@ section_noctalia() {
 # ═══════════════════════════════════════════════════════════════
 echo ""
 echo "  ┌──────────────────────────────────────────────┐"
-echo "  │  bootstrap: brew + alacritty + zsh + herdr   │"
-echo "  │             + ghostty + pi                   │"
+echo "  │  bootstrap: brew + ghostty + zsh + herdr     │"
+echo "  │             + pi                             │"
 echo "  └──────────────────────────────────────────────┘"
 echo ""
 
 section_mise
 section_brew
-section_alacritty
 section_ghostty
 section_zsh
 section_herdr

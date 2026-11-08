@@ -1,8 +1,8 @@
 # Bootstrap — System Config Reference
 
-## Alacritty (`~/.config/alacritty/alacritty.toml`)
+## Ghostty (`~/.config/ghostty/config.ghostty`)
 - Opens directly into herdr
-- `Ctrl+Shift+v` — disabled (use `Ctrl+v` instead)
+- Built-in `catppuccin-mocha` theme (matches herdr and mill's TUI)
 
 ## Homebrew (`~/.config/bootstrap/Brewfile`)
 Declarative package list. Add new tools here after `brew install`.
