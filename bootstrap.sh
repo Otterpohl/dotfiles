@@ -207,17 +207,8 @@ onboarding = false
 enabled = false
 
 [theme]
-# Pinned to mocha: auto_switch answers pane apps' OSC 11 background queries with the active
-# theme's bg, so a latte moment made mill's auto palette paint a near-white selection band.
-name = "catppuccin-mocha"
+name = "nord"
 auto_switch = false
-dark_name = "catppuccin-mocha"
-light_name = "catppuccin-latte"
-[theme.custom]
-# herdr 0.9.4 paints the sidebar dividers (sidebar/panes line, Spaces/Agents
-# split) in surface_dim, which on mocha matched the base background and made
-# both lines invisible. surface0 is one step lighter.
-surface_dim = "#313244"
 
 [ui]
 agent_panel_sort = "spaces"
@@ -233,8 +224,6 @@ delivery = "herdr"
 row_gap = 0
 rows = [
   ["state_icon", "workspace", "tab"],
-  # The $gate token mill's driver reports on agent panes whose work is waiting on you.
-  [{ token = "$gate", fg = "#cba6f7", bold = true }],
 ]
 
 [ui.sidebar.spaces]
