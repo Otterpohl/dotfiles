@@ -239,6 +239,7 @@ rows = [
 
 [ui.sidebar.spaces]
 row_gap = 0
+rows = [["workspace", "git_status"]]
 HERDR
   ok "  herdr config written"
   ok "  herdr installed"
