@@ -99,16 +99,12 @@ section_ghostty() {
   # Unquoted delimiter: $HOME expands at write time, so one template serves Linux and macOS.
   cat > "$GHOSTTY_CFG" << GHOSTTY
 # Managed by bootstrap.sh — edit there, not here.
-# Catppuccin Mocha: dark background, so everything matches herdr and mill's TUI.
 
 # [env] TERM
 term = xterm-256color
 
 # [terminal.shell]
 command = $HOME/.local/bin/herdr
-
-# Ghostty ships this theme; it matches the alacritty palette mill's TUI was tuned against
-theme = Catppuccin Mocha
 
 # Minimal defaults: no padding, no cursor blink
 window-padding-x = 0
