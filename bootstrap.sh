@@ -96,7 +96,8 @@ section_ghostty() {
   info "[ghostty] configuring…"
   mkdir -p "$(dirname "$GHOSTTY_CFG")"
 
-  cat > "$GHOSTTY_CFG" << 'GHOSTTY'
+  # Unquoted delimiter: $HOME expands at write time, so one template serves Linux and macOS.
+  cat > "$GHOSTTY_CFG" << GHOSTTY
 # Managed by bootstrap.sh — edit there, not here.
 # Catppuccin Mocha: dark background, so everything matches herdr and mill's TUI.
 
@@ -104,10 +105,7 @@ section_ghostty() {
 term = xterm-256color
 
 # [terminal.shell]
-command = /home/otterpohl/.local/bin/herdr
-
-# [keyboard] Ctrl+V = Paste
-keybind = ctrl+v=paste_from_clipboard
+command = $HOME/.local/bin/herdr
 
 # Ghostty ships this theme; it matches the alacritty palette mill's TUI was tuned against
 theme = Catppuccin Mocha
